@@ -14,7 +14,7 @@ var result = mongodb.MongoClient.connect(url, { useUnifiedTopology: true, useNew
     if (error) {
         return res.status(503).json({ status: "error", error: `${error}` });
     }
-    console.log("connected to the server");
+    console.log("connected to the database server");
     result = dbs;
 })
 
@@ -25,7 +25,23 @@ meditationTrackRoute.get('/', (req, res) => {
 })
 
 
-// GET /api/ULiveStream--uploading to db (Testing)
+//GET  /api/meditationTracks --fetching all tracks of meditation
+meditationTrackRoute.get('/meditationTracks', (req, res)=>{
+    const trackDB = result.db('breathing-app-trackdb')
+    console.log("connected to the track Database ");
+    trackDB.collection('fs.files').find({}).toArray(function(err, docs){
+        if(err){
+            return res.json({status: "error", error:`${err}`});
+        }
+        for(let i=0;i<docs.length; i++){
+            console.log(docs[i].filename);
+        }
+    })
+})
+
+
+
+// GET  /api/ULiveStream --uploading to db (Testing)
 meditationTrackRoute.get('/ULiveStream', (req, res) => {
 
     // connecting to particular database in url
@@ -40,7 +56,7 @@ meditationTrackRoute.get('/ULiveStream', (req, res) => {
 });
 
 
-// GET /api/DLiveStream/:trackName
+// GET  /api/DLiveStream/:trackName  --fetching perticular audio file from db
 meditationTrackRoute.get('/DLiveStream/:trackName', (req, res) => {
 
     // pass the unique track name through params
@@ -59,6 +75,8 @@ meditationTrackRoute.get('/DLiveStream/:trackName', (req, res) => {
     trackDB.collection('fs.files').findOne({ filename: `${trackName}` }, (err, audio) => {
         if (!audio) {
             return res.json({ status: '404', error: 'Track is not available' })
+        }else if(err){
+            return res.json({status: "error", error:`${err}`});
         }
 
         const trackSize = audio.length;
